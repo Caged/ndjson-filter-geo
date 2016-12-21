@@ -1,0 +1,83 @@
+#!/usr/bin/env node
+
+var readline = require("readline"),
+    vm = require("vm"),
+    commander = require("commander"),
+    requires = require("ndjson-cli/requires"),
+    expression = require("ndjson-cli/expression"),
+    output = require("ndjson-cli/output"),
+    jsts = require("jsts"),
+    fs   = require("fs")
+
+commander
+    .version(require("./package.json").version)
+    .usage("[options] [expression]")
+    .description("Filter values by geometry intersection")
+    .option("-f, --feature <>", "Feature object to test input intersection")
+    .option("-r, --require <name=module>", "require a module", requires, {d: undefined, i: -1})
+    .parse(process.argv);
+
+if (commander.args.length > 1) {
+  commander.outputHelp();
+  process.exit(1);
+}
+
+if (commander.args.length < 1) {
+  commander.args[0] = "true";
+}
+
+function readObject(stream) {
+  return new Promise(function(resolve, reject) {
+    var data = [];
+    stream
+        .on("data", function(d) { data.push(d); })
+        .on("end", function() { resolve(JSON.parse(Buffer.concat(data))); })
+        .on("error", reject);
+  });
+}
+
+readObject(fs.createReadStream(commander.feature))
+  .then(function(object) {
+    if(object.type != "Feature") {
+      console.error("")
+      console.error("Expected a feature for -f")
+      console.error("")
+      process.exit(1)
+    }
+
+    check(object)
+  })
+
+function check(feature) {
+  var sandbox = commander.require
+
+  sandbox.intersects = function intersects(d) {
+    var reader = new jsts.io.GeoJSONReader()
+    geom1 = reader.read(feature.geometry)
+    geom2 = reader.read(d.geometry)
+    return !geom2.intersection(geom1).isEmpty()
+  }
+
+  var i = -1,
+      filter = expression(commander.args[0]),
+      context = new vm.createContext(sandbox);
+
+  readline.createInterface({
+    input: process.stdin,
+    output: null
+  }).on("line", function(line) {
+    sandbox.i = ++i;
+    try {
+      sandbox.d = JSON.parse(line);
+    } catch (error) {
+      console.error("stdin:" + (i + 1));
+      console.error(line);
+      console.error("^");
+      console.error("SyntaxError: " + error.message);
+      process.exit(1);
+    }
+    if (filter.runInContext(context)) {
+      output(sandbox.d);
+    }
+  });
+}

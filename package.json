@@ -1,0 +1,24 @@
+{
+  "name": "ndjson-filter-geo",
+  "version": "0.0.1",
+  "description": "Filter newline-delimited JSON based on geometry intersections",
+  "bin": {
+    "ndjson-filter-geo": "ndjson-filter-geo"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ndjson",
+    "geo",
+    "gdal",
+    "gis"
+  ],
+  "author": "Justin Palmer",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "2",
+    "jsts": "^1.3.0",
+    "ndjson-cli": "^0.3.0"
+  }
+}
