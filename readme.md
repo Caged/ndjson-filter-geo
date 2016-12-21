@@ -1,4 +1,4 @@
-A hack on top of https://github.com/mbostock/ndjson-cli which filters features based on geometry intersections.
+A hack on top of https://github.com/mbostock/ndjson-cli which filters features based on geometry intersections. Much of this lifted from the existing [ndjson-filter](https://github.com/mbostock/ndjson-cli/blob/master/ndjson-filter) implementation. 
 
 ``` bash
 cat test/grid.json \
